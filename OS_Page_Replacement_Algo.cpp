@@ -1,4 +1,4 @@
-#include<bits/stdc++.h>
+#include <bits/stdc++.h>
 using namespace std;
 
 // Declaration of Classes
@@ -11,81 +11,117 @@ class Process;
 class RAM;
 class algoData;
 
-const map<string,algoData*> mapping = {
-};
-
+const map<string, algoData *> mapping = {};
 
 // Defination of Classes
-class history{
-    vector<pair<input*,output*>> hist;
+class history
+{
+    vector<pair<input *, output *>> hist;
 };
 
-class handler{
+class handler
+{
     int RAMSize;
     int noOfProcess;
     int processSize;
 
-    public: static handler* createHandler();
-    private: void analyzeOnAllPageSize();
-    private: void printAnalyzedData();
+public:
+    static handler *createHandler();
+
+private:
+    void analyzeOnAllPageSize();
+
+private:
+    void printAnalyzedData();
 };
 
-class analyze{
+class analyze
+{
     int noOfProcess;
     int noOfPages;
     int noOfRAMPages;
     vector<int> curOutput;
 
-    analyze(int noOfProcess,int RAMSize,int processSize,int pageSize);
+    analyze(int noOfProcess, int noOfPages, int noOfRAMPages);
 
-    public: static analyze* createAnalyze(int noOfProcess,int RAMSize,int processSize,int pageSize);
-    private: void runProcesses();
-    private: void updateOutput();
+public:
+    static analyze *createAnalyze(int noOfProcess, int RAMSize, int processSize, int pageSize);
+
+private:
+    void runProcesses();
+
+private:
+    void updateOutput();
+
+private:
+    void mergeOutput(vector<int> newOutput);
 };
 
-class process{
+class process
+{
     int noOfRAMPages;
     int noOfpages;
-    vector<int> pageID; //randomly generated, with length predefined
+    vector<int> pageID; // randomly generated, with length predefined
 
-    public: static void createProcess(int noOfPages,int noOfRAMPages);
-    private: vector<int> runProcess();
+public:
+    static process* createProcess(int noOfPages, int noOfRAMPages);
+
+public:
+    vector<int> runProcess();
 };
 
-class RAM{
+class RAM
+{
     int noOfRAMPages;
     int noOfpages;
     vector<int> pageID;
 
-    public: static int processRAM(int noOfPages,int noOfRAMPages);
+public:
+    static int processRAM(int noOfPages, int noOfRAMPages);
 };
 
-class algoData{
-    public:
-    function<RAM*(int,int,vector<int>)> createFunction;
+class algoData
+{
+public:
+    function<RAM *(int, int, vector<int>)> createFunction;
     int algoID;
 };
 
-
-
 // Defination of Functions
 
+// Analyze Class
 
-//Analyze Class
-
-analyze::analyze(int noOfProcess,int RAMSize,int processSize,int pageSize){
-    this->noOfProcess=noOfProcess;
-    this->noOfPages=((processSize+pageSize-1)/pageSize);
-    this->noOfRAMPages=((RAMSize+pageSize-1)/pageSize);
+analyze::analyze(int noOfProcess, int noOfPages, int noOfRAMPages)
+{
+    this->noOfProcess = noOfProcess;
+    this->noOfPages = noOfPages;
+    this->noOfRAMPages = noOfRAMPages;
 }
 
-analyze* analyze::createAnalyze(int noOfProcess,int RAMSize,int processSize,int pageSize){
-    
+analyze *analyze::createAnalyze(int noOfProcess, int RAMSize, int processSize, int pageSize)
+{
+    int noOfPages = ((processSize + pageSize - 1) / pageSize);
+    int noOfRAMPages = ((RAMSize + pageSize - 1) / pageSize);
+    return new analyze(noOfProcess, noOfPages, noOfRAMPages);
+}
+
+void analyze::runProcesses(){
+    int processRemaining=noOfProcess;
+    while(processRemaining--){
+        process* curProcess=process::createProcess(noOfPages,noOfRAMPages);
+        vector<int> newOutput=curProcess->runProcess();
+        this->mergeOutput(newOutput);
+    }
+}
+
+void analyze::mergeOutput(vector<int> newOutput){
+    for(int i=0;i<newOutput.size();i++){
+        curOutput[i]+=newOutput[i];
+    }
 }
 
 
-
-int main(){
-
+int main()
+{
     return 0;
 }
