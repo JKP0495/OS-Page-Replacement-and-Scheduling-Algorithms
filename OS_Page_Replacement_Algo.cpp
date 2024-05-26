@@ -43,7 +43,7 @@ class analyze
     int noOfRAMPages;
     vector<int> curOutput;
 
-    analyze(int noOfProcess, int RAMSize, int processSize, int pageSize);
+    analyze(int noOfProcess, int RAMSize, int processSize);
 
 public:
     static analyze *createAnalyze(int noOfProcess, int RAMSize, int processSize, int pageSize);
