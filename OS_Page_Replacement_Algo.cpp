@@ -25,19 +25,20 @@ class handler{
     int noOfProcess;
     int processSize;
 
-    public: static void createHandler();
+    public: static handler* createHandler();
     private: void analyzeOnAllPageSize();
     private: void printAnalyzedData();
 };
 
 class analyze{
-    int pageSize;
     int noOfProcess;
     int noOfPages;
     int noOfRAMPages;
     vector<int> curOutput;
 
-    public: static void createAnalyze(int noOfProcess,int RAMSize,int processSize,int pageSize);
+    analyze(int noOfProcess,int RAMSize,int processSize,int pageSize);
+
+    public: static analyze* createAnalyze(int noOfProcess,int RAMSize,int processSize,int pageSize);
     private: void runProcesses();
     private: void updateOutput();
 };
@@ -45,9 +46,9 @@ class analyze{
 class process{
     int noOfRAMPages;
     int noOfpages;
-    vector<int> pageID;
+    vector<int> pageID; //randomly generated, with length predefined
 
-    public: static void createProcess(int noOfPages,int processSize,int noOfRAMPages);
+    public: static void createProcess(int noOfPages,int noOfRAMPages);
     private: vector<int> runProcess();
 };
 
@@ -56,7 +57,7 @@ class RAM{
     int noOfpages;
     vector<int> pageID;
 
-    public: static int processRAM(int noOfPages,int processSize,int noOfRAMPages);
+    public: static int processRAM(int noOfPages,int noOfRAMPages);
 };
 
 class algoData{
@@ -69,6 +70,18 @@ class algoData{
 
 // Defination of Functions
 
+
+//Analyze Class
+
+analyze::analyze(int noOfProcess,int RAMSize,int processSize,int pageSize){
+    this->noOfProcess=noOfProcess;
+    this->noOfPages=((processSize+pageSize-1)/pageSize);
+    this->noOfRAMPages=((RAMSize+pageSize-1)/pageSize);
+}
+
+analyze* analyze::createAnalyze(int noOfProcess,int RAMSize,int processSize,int pageSize){
+    
+}
 
 
 
