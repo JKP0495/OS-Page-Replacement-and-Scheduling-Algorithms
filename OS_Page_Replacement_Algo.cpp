@@ -9,6 +9,10 @@ class output;
 class analyze;
 class Process;
 class RAM;
+class algoData;
+
+const map<string,algoData*> mapping = {
+};
 
 
 // Defination of Classes
@@ -40,14 +44,25 @@ class analyze{
 
 class process{
     int noOfRAMPages;
+    int noOfpages;
     vector<int> pageID;
 
-    public: static void createProcess(int noOfPages,int noOfRAMPages);
+    public: static void createProcess(int noOfPages,int processSize,int noOfRAMPages);
     private: vector<int> runProcess();
 };
 
 class RAM{
-    
+    int noOfRAMPages;
+    int noOfpages;
+    vector<int> pageID;
+
+    public: static int processRAM(int noOfPages,int processSize,int noOfRAMPages);
+};
+
+class algoData{
+    public:
+    function<RAM*(int,int,vector<int>)> createFunction;
+    int algoID;
 };
 
 
