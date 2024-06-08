@@ -27,6 +27,8 @@ class handler
     int noOfProcess;
     int processSize;
 
+    handler(int RAMSize, int noOfProcess, int processSize);
+
 public:
     static handler *createHandler();
 
@@ -101,6 +103,15 @@ private:
 
 public:
     static void createHistory();
+
+public:
+    int getRAMSize();
+
+public:
+    int getNoOfProcess();
+
+public:
+    int getProcessSize();
 };
 
 class output
@@ -170,6 +181,36 @@ void input::createHistory()
     input *in = input::getInput();
     output *out = output::getOutput();
     history::hist.push_back({in, out});
+}
+
+int input::getRAMSize()
+{
+    return this->RAMSize;
+}
+
+int input::getNoOfProcess()
+{
+    return this->noOfProcess;
+}
+
+int input::getProcessSize()
+{
+    return this->processSize;
+}
+
+// Handler Class
+
+handler::handler(int RAMSize, int noOfProcess, int processSize)
+{
+    this->RAMSize = RAMSize;
+    this->noOfProcess = noOfProcess;
+    this->processSize = processSize;
+}
+
+handler *handler::createHandler()
+{
+    input *curInput = history::hist.back().first;
+    return new handler(curInput->getRAMSize(), curInput->getNoOfProcess(), curInput->getProcessSize());
 }
 
 // Analyze Class
