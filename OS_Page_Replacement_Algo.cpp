@@ -99,17 +99,17 @@ class input
     input(int RAMSize, int noOfProcess, int processSize);
 
 private:
-    input *getInput();
+    static input *getInput();
 
 public:
     static void createHistory();
 
 public:
     int getRAMSize();
-    
+
 public:
     int getNoOfProcess();
-    
+
 public:
     int getProcessSize();
 };
@@ -119,12 +119,11 @@ class output
     vector<int> mainOutput;
     output();
 
-private:
+public:
     void mergeOutput(vector<int> curOutput);
 
 public:
     static output *getOutput();
-
 };
 
 // Defination of Functions
@@ -179,34 +178,39 @@ input *input::getInput()
 
 void input::createHistory()
 {
-    input *in = getInput();
+    input *in = input::getInput();
     output *out = output::getOutput();
     history::hist.push_back({in, out});
 }
 
-int input::getRAMSize(){
+int input::getRAMSize()
+{
     return this->RAMSize;
 }
 
-int input::getNoOfProcess(){
+int input::getNoOfProcess()
+{
     return this->noOfProcess;
 }
 
-int input::getProcessSize(){
+int input::getProcessSize()
+{
     return this->processSize;
 }
 
 // Handler Class
 
-handler::handler(int RAMSize, int noOfProcess, int processSize){
-    this->RAMSize=RAMSize;
-    this->noOfProcess=noOfProcess;
-    this->processSize=processSize;
+handler::handler(int RAMSize, int noOfProcess, int processSize)
+{
+    this->RAMSize = RAMSize;
+    this->noOfProcess = noOfProcess;
+    this->processSize = processSize;
 }
 
-handler *handler::createHandler(){
-    input *curInput=history::hist.back().first;
-    return new handler(curInput->getRAMSize(),curInput->getNoOfProcess(),curInput->getProcessSize());
+handler *handler::createHandler()
+{
+    input *curInput = history::hist.back().first;
+    return new handler(curInput->getRAMSize(), curInput->getNoOfProcess(), curInput->getProcessSize());
 }
 
 // Analyze Class
