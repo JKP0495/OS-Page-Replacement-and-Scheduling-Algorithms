@@ -17,7 +17,8 @@ const map<string, algoData *> mapping = {};
 class history
 {
 public:
-    static vector<pair<input *, output *>> hist;
+    static vector<pair<input *, output *>>
+        hist;
 };
 
 class handler
@@ -53,9 +54,6 @@ private:
 
 private:
     void updateOutput();
-
-private:
-    void mergeOutput(vector<int> curOutput);
 };
 
 class process
@@ -98,11 +96,52 @@ class input
     int processSize;
     input(int RAMSize, int noOfProcess, int processSize);
 
+private:
+    input *getInput();
+
 public:
-    static void getInput();
+    static void createHistory();
+};
+
+class output
+{
+    vector<int> mainOutput;
+    output();
+
+private:
+    void mergeOutput(vector<int> curOutput);
+
+public:
+    static output *getOutput();
 };
 
 // Defination of Functions
+
+// output class
+
+output::output()
+{
+}
+
+output *output::getOutput()
+{
+    return new output();
+}
+
+void output::mergeOutput(vector<int> curOutput)
+{
+    for (int i = 0; i < curOutput.size(); i++)
+    {
+        if (this->mainOutput.size() > i)
+        {
+            this->mainOutput[i] += curOutput[i];
+        }
+        else
+        {
+            this->mainOutput.push_back(curOutput[i]);
+        }
+    }
+}
 
 // input class
 input::input(int RAMSize, int noOfProcess, int processSize)
@@ -111,7 +150,8 @@ input::input(int RAMSize, int noOfProcess, int processSize)
     this->noOfProcess = noOfProcess;
     this->processSize = processSize;
 }
-void input::getInput()
+
+input *input::getInput()
 {
     int RAMSize;
     int noOfProcess;
@@ -122,7 +162,14 @@ void input::getInput()
     cin >> RAMSize;
     cout << "Enter the size of the process on which you want to test the compatability of different algorithms" << endl;
     cin >> processSize;
-    history::hist.push_back(new input(RAMSize, noOfProcess, processSize), NULL);
+    return new input(RAMSize, noOfProcess, processSize);
+}
+
+void input::createHistory()
+{
+    input *in = getInput();
+    output *out = output::getOutput();
+    history::hist.push_back({in, out});
 }
 
 // Analyze Class
@@ -138,26 +185,17 @@ analyze *analyze::createAnalyze(int noOfProcess, int RAMSize, int processSize, i
 {
     int noOfPages = ((processSize + pageSize - 1) / pageSize);
     int noOfRAMPages = ((RAMSize + pageSize - 1) / pageSize);
-    return new analyze(noOfProcess,noOfPages,noOfRAMPages);
+    return new analyze(noOfProcess, noOfPages, noOfRAMPages);
 }
 
 void analyze::runProcesses()
 {
-    for(int i=0;i<noOfProcess;i++){
-        process* curProcess=process::createProcess(noOfPages,noOfRAMPages);
-        vector<int> curOutput=curProcess->runProcess();
-        mergeOutput(curOutput);
-    }
-}
-
-void analyze::mergeOutput(vector<int> curOutput){
-    for(int i=0;i<curOutput.size();i++){
-        if(this->curOutput.size()>i){
-            this->curOutput[i]+=curOutput[i];
-        }
-        else{
-            this->curOutput.push_back(curOutput[i]);
-        }
+    for (int i = 0; i < noOfProcess; i++)
+    {
+        process *curProcess = process::createProcess(noOfPages, noOfRAMPages);
+        vector<int> curOutput = curProcess->runProcess();
+        output *mainOutput = history::hist.back().second;
+        mainOutput->mergeOutput(curOutput);
     }
 }
 
@@ -187,7 +225,7 @@ vector<int> process::runProcess()
     vector<int> processOutput;
     for (auto it : mapping)
     {
-        RAM *process = it.second.createFunction(noOfpages,noOfRAMPages,pageID);
+        RAM *process = it.second.createFunction(noOfpages, noOfRAMPages, pageID);
         processOutput.push_back(process->processRAM(noOfpages, noOfRAMPages, pageID));
     }
     return processOutput;
