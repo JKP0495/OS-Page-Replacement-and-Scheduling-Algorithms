@@ -97,7 +97,7 @@ class input
     input(int RAMSize, int noOfProcess, int processSize);
 
 private:
-    input *getInput();
+    static input *getInput();
 
 public:
     static void createHistory();
@@ -108,7 +108,7 @@ class output
     vector<int> mainOutput;
     output();
 
-private:
+public:
     void mergeOutput(vector<int> curOutput);
 
 public:
@@ -167,7 +167,7 @@ input *input::getInput()
 
 void input::createHistory()
 {
-    input *in = getInput();
+    input *in = input::getInput();
     output *out = output::getOutput();
     history::hist.push_back({in, out});
 }
