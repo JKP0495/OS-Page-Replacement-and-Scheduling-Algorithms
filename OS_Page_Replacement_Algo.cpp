@@ -26,6 +26,8 @@ class handler
     int noOfProcess;
     int processSize;
 
+    handler(int RAMSize, int noOfProcess, int processSize);
+
 public:
     static handler *createHandler();
 
@@ -100,6 +102,15 @@ class input
 
 public:
     static void getInput();
+
+public:
+    int getRAMSize();
+    
+public:
+    int getNoOfProcess();
+    
+public:
+    int getProcessSize();
 };
 
 // Defination of Functions
@@ -123,6 +134,31 @@ void input::getInput()
     cout << "Enter the size of the process on which you want to test the compatability of different algorithms" << endl;
     cin >> processSize;
     history::hist.push_back(new input(RAMSize, noOfProcess, processSize), NULL);
+}
+
+int input::getRAMSize(){
+    return this->RAMSize;
+}
+
+int input::getNoOfProcess(){
+    return this->noOfProcess;
+}
+
+int input::getProcessSize(){
+    return this->processSize;
+}
+
+// Handler Class
+
+handler::handler(int RAMSize, int noOfProcess, int processSize){
+    this->RAMSize=RAMSize;
+    this->noOfProcess=noOfProcess;
+    this->processSize=processSize;
+}
+
+handler *handler::createHandler(){
+    input *curInput=history::hist.back().first;
+    return new handler(curInput->getRAMSize(),curInput->getNoOfProcess(),curInput->getProcessSize());
 }
 
 // Analyze Class
