@@ -51,11 +51,14 @@ class analyze
 public:
     static analyze *createAnalyze(int noOfProcess, int RAMSize, int processSize, int pageSize);
 
-private:
+public:
     void runProcesses();
 
-private:
+public:
     void updateOutput();
+
+private:
+    void mergeOutput(vector<int> curOutput);
 };
 
 class process
@@ -116,7 +119,7 @@ public:
 
 class output
 {
-    vector<int> mainOutput;
+    vector<vector<int>> mainOutput;
     output();
 
 public:
@@ -141,17 +144,7 @@ output *output::getOutput()
 
 void output::mergeOutput(vector<int> curOutput)
 {
-    for (int i = 0; i < curOutput.size(); i++)
-    {
-        if (this->mainOutput.size() > i)
-        {
-            this->mainOutput[i] += curOutput[i];
-        }
-        else
-        {
-            this->mainOutput.push_back(curOutput[i]);
-        }
-    }
+    this->mainOutput.push_back(curOutput);
 }
 
 // input class
@@ -213,6 +206,21 @@ handler *handler::createHandler()
     return new handler(curInput->getRAMSize(), curInput->getNoOfProcess(), curInput->getProcessSize());
 }
 
+void handler::analyzeOnAllPageSize()
+{
+    for(int curPageSize=0;curPageSize<processSize;curPageSize++){
+        analyze *curAnalyze=analyze::createAnalyze(noOfProcess,RAMSize,processSize,curPageSize);
+        curAnalyze->runProcesses();
+        curAnalyze->updateOutput();
+    }
+}
+
+void handler::printAnalyzedData()
+{
+    output *mainOutput=history::hist.back().second;
+    mainOutput->printOutput();
+}
+
 // Analyze Class
 
 analyze::analyze(int noOfProcess, int noOfPages, int noOfRAMPages)
@@ -235,8 +243,24 @@ void analyze::runProcesses()
     {
         process *curProcess = process::createProcess(noOfPages, noOfRAMPages);
         vector<int> curOutput = curProcess->runProcess();
-        output *mainOutput = history::hist.back().second;
-        mainOutput->mergeOutput(curOutput);
+        mergeOutput(curOutput);
+    }
+    output *mainOutput = history::hist.back().second;
+    mainOutput->mergeOutput(this->curOutput);
+}
+
+void analyze::mergeOutput(vector<int> curOutput)
+{
+    for (int i = 0; i < curOutput.size(); i++)
+    {
+        if (this->curOutput.size() > i)
+        {
+            this->curOutput[i] += curOutput[i];
+        }
+        else
+        {
+            this->curOutput.push_back(curOutput[i]);
+        }
     }
 }
 
@@ -266,7 +290,7 @@ vector<int> process::runProcess()
     vector<int> processOutput;
     for (auto it : mapping)
     {
-        RAM *process = it.second.createFunction(noOfpages, noOfRAMPages, pageID);
+        RAM *process = it.second->createFunction(noOfpages, noOfRAMPages, pageID);
         processOutput.push_back(process->processRAM(noOfpages, noOfRAMPages, pageID));
     }
     return processOutput;
