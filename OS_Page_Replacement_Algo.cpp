@@ -10,15 +10,13 @@ class analyze;
 class Process;
 class RAM;
 class algoData;
-
-const map<string, algoData *> mapping = {};
+class FIFO;
 
 // Defination of Classes
 class history
 {
 public:
-    static vector<pair<input *, output *>>
-        hist;
+    static vector<pair<input *, output *>> hist;
 };
 
 class handler
@@ -54,9 +52,6 @@ public:
 public:
     void runProcesses();
 
-public:
-    void updateOutput();
-
 private:
     void mergeOutput(vector<int> curOutput);
 };
@@ -83,11 +78,18 @@ class RAM
     vector<int> pageID;
 
 public:
-    static int processRAM(int noOfPages, int noOfRAMPages, vector<int> pageID);
+    RAM(int noOfRAMPages, int noOfpages, vector<int> pageID);
+
+public:
+    virtual int processRAM(int noOfPages, int noOfRAMPages, vector<int> pageID) = 0;
 };
 
 class algoData
 {
+
+public:
+    algoData(function<RAM *(int, int, vector<int>)> createFunction, int algoID);
+
 public:
     function<RAM *(int, int, vector<int>)> createFunction;
     int algoID;
@@ -115,6 +117,9 @@ public:
 
 public:
     int getProcessSize();
+
+public:
+    void printData();
 };
 
 class output
@@ -127,7 +132,25 @@ public:
 
 public:
     static output *getOutput();
+
+public:
+    void printData();
 };
+
+class FIFO : public RAM
+{
+
+public:
+    FIFO(int noOfRAMPages, int noOfpages, vector<int> pageID) : RAM(noOfRAMPages, noOfpages, pageID){};
+
+public:
+    int processRAM(int noOfPages, int noOfRAMPages, vector<int> pageID) override;
+};
+
+// Mapping of algo to its name
+map<string, algoData *> mapping = {
+    {"FIFO", new algoData([&](int noOfRAMPages, int noOfpages, vector<int> pageID)
+                          { return new FIFO(noOfRAMPages, noOfpages, pageID); }, 1)}};
 
 // Defination of Functions
 
@@ -145,6 +168,13 @@ output *output::getOutput()
 void output::mergeOutput(vector<int> curOutput)
 {
     this->mainOutput.push_back(curOutput);
+}
+
+void output::printData()
+{
+    // Naisheel please complete this
+    // This function prints output(analyzed) data given to it for final print of output
+    cout << "HI" << endl;
 }
 
 // input class
@@ -191,6 +221,13 @@ int input::getProcessSize()
     return this->processSize;
 }
 
+void input::printData()
+{
+    // Naisheel please complete this
+    // This function prints input data given to it for final print of output
+    cout << "HI" << endl;
+}
+
 // Handler Class
 
 handler::handler(int RAMSize, int noOfProcess, int processSize)
@@ -208,17 +245,23 @@ handler *handler::createHandler()
 
 void handler::analyzeOnAllPageSize()
 {
-    for(int curPageSize=0;curPageSize<processSize;curPageSize++){
-        analyze *curAnalyze=analyze::createAnalyze(noOfProcess,RAMSize,processSize,curPageSize);
+    for (int curPageSize = 0; curPageSize < processSize; curPageSize++)
+    {
+        analyze *curAnalyze = analyze::createAnalyze(noOfProcess, RAMSize, processSize, curPageSize);
         curAnalyze->runProcesses();
-        curAnalyze->updateOutput();
     }
 }
 
 void handler::printAnalyzedData()
 {
-    output *mainOutput=history::hist.back().second;
-    mainOutput->printOutput();
+    input *mainInput = history::hist.back().first;
+    output *mainOutput = history::hist.back().second;
+
+    // Prints input data
+    mainInput->printData();
+
+    // Prints input data
+    mainOutput->printData();
 }
 
 // Analyze Class
@@ -294,6 +337,42 @@ vector<int> process::runProcess()
         processOutput.push_back(process->processRAM(noOfpages, noOfRAMPages, pageID));
     }
     return processOutput;
+}
+
+// RAM class
+
+RAM::RAM(int noOfRAMPages, int noOfpages, vector<int> pageID)
+{
+    this->noOfpages = noOfpages;
+    this->noOfRAMPages = noOfRAMPages;
+    this->pageID = pageID;
+}
+
+// algoData class
+
+algoData::algoData(function<RAM *(int, int, vector<int>)> createFunction, int algoID)
+{
+    this->algoID = algoID;
+    this->createFunction = createFunction;
+}
+
+// FIFO class
+int FIFO::processRAM(int noOfPages, int noOfRAMPages, vector<int> pageID)
+{
+    int missCount = 0;
+    set<int> chachedPages;
+    queue<int> inOrder;
+    for (int i = 0; i < pageID.size(); i++)
+    {
+        if (!chachedPages.count(pageID[i]))
+        {
+            missCount++;
+            chachedPages.erase(inOrder.front());
+            inOrder.pop();
+            chachedPages.insert(pageID[i]);
+            inOrder.push(pageID[i]);
+        }
+    }
 }
 
 int main()
