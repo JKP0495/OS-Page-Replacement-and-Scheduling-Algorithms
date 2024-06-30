@@ -15,8 +15,14 @@ class FIFO;
 // Defination of Classes
 class history
 {
+private
+    static history *currentInstance;
+
 public:
     static vector<pair<input *, output *>> hist;
+    // deleting copy constructor
+    history(const history &obj) = delete;
+    static history *getInstance();
 };
 
 class handler
@@ -153,6 +159,24 @@ map<string, algoData *> mapping = {
                           { return new FIFO(noOfRAMPages, noOfpages, pageID); }, 1)}};
 
 // Defination of Functions
+
+// history class
+history *history::getInstance()
+{
+    if (currentInstance == NULL)
+    {
+        // We can access private members
+        // within the class.
+        currentInstance = new history();
+
+        // returning the instance pointer
+        return currentInstance;
+    }
+    else
+    {
+        return currentInstance;
+    }
+}
 
 // output class
 
