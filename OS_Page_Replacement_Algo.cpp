@@ -170,13 +170,13 @@ public:
 
 // Mapping of algo to its name
 unordered_map<string, algoData *> mapping = {{"OPT", new algoData([&](int noOfRAMPages, int noOfPages, vector<int> pageID)
-                                                                  { return new OPT(noOfRAMPages, noOfPages, pageID); }, 0)},
+                                                                  { return new OPT(noOfRAMPages, noOfPages, pageID); }, 1)},
                                              {"FIFO", new algoData([&](int noOfRAMPages, int noOfPages, vector<int> pageID)
-                                                                   { return new FIFO(noOfRAMPages, noOfPages, pageID); }, 1)},
+                                                                   { return new FIFO(noOfRAMPages, noOfPages, pageID); }, 2)},
                                              {"LRU", new algoData([&](int noOfRAMPages, int noOfPages, vector<int> pageID)
-                                                                  { return new LRU(noOfRAMPages, noOfPages, pageID); }, 2)},
+                                                                  { return new LRU(noOfRAMPages, noOfPages, pageID); }, 3)},
                                              {"MRU", new algoData([&](int noOfRAMPages, int noOfPages, vector<int> pageID)
-                                                                  { return new MRU(noOfRAMPages, noOfPages, pageID); }, 3)}};
+                                                                  { return new MRU(noOfRAMPages, noOfPages, pageID); }, 4)}};
 
 // Defination of Functions
 
