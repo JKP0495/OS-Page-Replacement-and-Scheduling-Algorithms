@@ -23,6 +23,8 @@ public:
     // deleting copy constructor
     history(const history &obj) = delete;
     static history *getInstance();
+    void updateHistory(input *in, output *out);
+    pair<input *, output *> getLastElement();
 };
 
 class handler
@@ -176,6 +178,16 @@ history *history::getInstance()
     {
         return currentInstance;
     }
+}
+
+void history::updateHistory(input *in, output *out)
+{
+    hist.push_back({in, out});
+}
+
+pair<input *, output *> history::getLastElement()
+{
+    return hist.back();
 }
 
 // output class
