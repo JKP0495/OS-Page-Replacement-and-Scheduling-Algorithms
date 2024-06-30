@@ -15,14 +15,15 @@ class FIFO;
 // Defination of Classes
 class history
 {
-private
+private:
     static history *currentInstance;
-    static vector<pair<input *, output *>> hist;
+    vector<pair<input *, output *>> hist;
 
 public:
     // deleting copy constructor
-    history(const history &obj) = delete;
+    // history(const history &obj) = delete;
     static history *getInstance();
+    history(){};
     void updateHistory(input *in, output *out);
     pair<input *, output *> getLastElement();
 };
@@ -163,6 +164,9 @@ map<string, algoData *> mapping = {
 // Defination of Functions
 
 // history class
+
+history *history::currentInstance = NULL;
+
 history *history::getInstance()
 {
     if (currentInstance == NULL)
@@ -239,7 +243,8 @@ void input::createHistory()
 {
     input *in = input::getInput();
     output *out = output::getOutput();
-    history::hist.push_back({in, out});
+    history *instance = history::getInstance();
+    instance->updateHistory(in, out);
 }
 
 int input::getRAMSize()
@@ -275,7 +280,8 @@ handler::handler(int RAMSize, int noOfProcess, int processSize)
 
 handler *handler::createHandler()
 {
-    input *curInput = history::hist.back().first;
+    history *instance = history::getInstance();
+    input *curInput = instance->getLastElement().first;
     return new handler(curInput->getRAMSize(), curInput->getNoOfProcess(), curInput->getProcessSize());
 }
 
@@ -290,8 +296,9 @@ void handler::analyzeOnAllPageSize()
 
 void handler::printAnalyzedData()
 {
-    input *mainInput = history::hist.back().first;
-    output *mainOutput = history::hist.back().second;
+    history *instance = history::getInstance();
+    input *mainInput = instance->getLastElement().first;
+    output *mainOutput = instance->getLastElement().second;
 
     // Prints input data
     mainInput->printData();
@@ -324,7 +331,8 @@ void analyze::runProcesses()
         vector<int> curOutput = curProcess->runProcess();
         mergeOutput(curOutput);
     }
-    output *mainOutput = history::hist.back().second;
+    history *instance = history::getInstance();
+    output *mainOutput = instance->getLastElement().second;
     mainOutput->mergeOutput(this->curOutput);
 }
 
