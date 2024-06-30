@@ -14,6 +14,8 @@ class Process;
 class RAM;
 class algoData;
 class FIFO;
+class LRU;
+class MRU;
 
 // Defination of Classes
 class history
@@ -156,10 +158,35 @@ public:
     vector<int> processRAM(int noOfPages, int noOfRAMPages, vector<int> pageID) override;
 };
 
+class LRU : public RAM
+{
+
+public:
+    LRU(int noOfRAMPages, int noOfPages, vector<int> pageID) : RAM(noOfRAMPages, noOfPages, pageID){};
+
+public:
+    vector<int> processRAM(int noOfPages, int noOfRAMPages, vector<int> pageID) override;
+};
+
+class MRU : public RAM
+{
+
+public:
+    MRU(int noOfRAMPages, int noOfPages, vector<int> pageID) : RAM(noOfRAMPages, noOfPages, pageID){};
+
+public:
+    vector<int> processRAM(int noOfPages, int noOfRAMPages, vector<int> pageID) override;
+};
+
 // Mapping of algo to its name
-map<string, algoData *> mapping = {
-    {"FIFO", new algoData([&](int noOfRAMPages, int noOfPages, vector<int> pageID)
-                          { return new FIFO(noOfRAMPages, noOfPages, pageID); }, 1)}};
+unordered_map<string, algoData *> mapping = {{"OPT", new algoData([&](int noOfRAMPages, int noOfPages, vector<int> pageID)
+                                                                  { return new OPT(noOfRAMPages, noOfPages, pageID); }, 1)},
+                                             {"FIFO", new algoData([&](int noOfRAMPages, int noOfPages, vector<int> pageID)
+                                                                   { return new FIFO(noOfRAMPages, noOfPages, pageID); }, 2)},
+                                             {"LRU", new algoData([&](int noOfRAMPages, int noOfPages, vector<int> pageID)
+                                                                  { return new LRU(noOfRAMPages, noOfPages, pageID); }, 3)},
+                                             {"MRU", new algoData([&](int noOfRAMPages, int noOfPages, vector<int> pageID)
+                                                                  { return new MRU(noOfRAMPages, noOfPages, pageID); }, 4)}};
 
 // Defination of Functions
 
@@ -217,7 +244,6 @@ void history::printCurrentStats()
     for(auto it: rowString){
         cout<<it<<endl;
     }
-    
 }
 
 history *history::getInstance()
@@ -352,7 +378,7 @@ analyze::analyze(int noOfProcess, int noOfPages, int noOfRAMPages)
 analyze *analyze::createAnalyze(int noOfProcess, int RAMSize, int processSize, int pageSize)
 {
     int noOfPages = (pageSize == 0 ? -1 : ((processSize + pageSize - 1) / pageSize));
-    int noOfRAMPages = (pageSize == 0 ? -1 : ((RAMSize + pageSize - 1) / pageSize));
+    int noOfRAMPages = (pageSize == 0 ? -1 : (RAMSize / pageSize));
     return new analyze(noOfProcess, noOfPages, noOfRAMPages);
 }
 
@@ -397,7 +423,7 @@ process::process(int noOfPages, int noOfRAMPages, vector<int> pageID)
 process *process::createProcess(int noOfPages, int noOfRAMPages)
 {
     vector<int> pageID;
-    int noOfBlocks = 10 * noOfPages;
+    int noOfBlocks = 100 * noOfPages;
     for (int i = 0; i < noOfBlocks; i++)
     {
         int pid = (rand() % noOfPages) + 1;
@@ -412,8 +438,9 @@ vector<vector<int>> process::runProcess()
     vector<vector<int>> processOutput(1,vector<int>(2,-1));
     for (auto it : mapping)
     {
-        if(noOfPages == -1){
-            processOutput.push_back({-1,-1});
+        if (noOfPages == -1)
+        {
+            processOutput.push_back({-1, -1});
             continue;
         }
         RAM *process = it.second->createFunction(noOfPages, noOfRAMPages, pageID);
@@ -452,17 +479,108 @@ vector<int> FIFO::processRAM(int noOfPages, int noOfRAMPages, vector<int> pageID
         {
             missCount++;
             chachedPages.erase(inOrder.front());
-            if(chachedPages.size() == noOfRAMPages)inOrder.pop();
+            if (chachedPages.size() == noOfRAMPages)
+                inOrder.pop();
             chachedPages.insert(pageID[i]);
             inOrder.push(pageID[i]);
         }
     }
-    return {missCount,total};
+    return {missCount, total};
+}
+
+// LRU class
+
+vector<int> LRU::processRAM(int noOfPages, int noOfRAMPages, vector<int> pageID)
+{
+    int missCount = 0;
+    int total = pageID.size();
+
+    unordered_set<int> s;
+    unordered_map<int, int> indexes;
+
+    for (int i = 0; i < pageID.size(); i++)
+    {
+        if (s.size() < noOfRAMPages)
+        {
+            if (s.find(pageID[i]) == s.end())
+            {
+                s.insert(pageID[i]);
+                missCount++;
+            }
+            indexes[pageID[i]] = i;
+        }
+        else
+        {
+            if (s.find(pageID[i]) == s.end())
+            {
+                int lru = INT_MAX, val;
+                for (auto it = s.begin(); it != s.end(); it++)
+                {
+                    if (indexes[*it] < lru)
+                    {
+                        lru = indexes[*it];
+                        val = *it;
+                    }
+                }
+
+                s.erase(val);
+                s.insert(pageID[i]);
+                missCount++;
+            }
+            indexes[pageID[i]] = i;
+        }
+    }
+    return {total, missCount};
+}
+
+// MRU class
+
+vector<int> MRU::processRAM(int noOfPages, int noOfRAMPages, vector<int> pageID)
+{
+    int missCount = 0;
+    int total = pageID.size();
+
+    unordered_set<int> s;
+    unordered_map<int, int> indexes;
+
+    for (int i = 0; i < pageID.size(); i++)
+    {
+        if (s.size() < noOfRAMPages)
+        {
+            if (s.find(pageID[i]) == s.end())
+            {
+                s.insert(pageID[i]);
+                missCount++;
+            }
+            indexes[pageID[i]] = i;
+        }
+        else
+        {
+            if (s.find(pageID[i]) == s.end())
+            {
+                int mru = -1, val;
+                for (auto it = s.begin(); it != s.end(); it++)
+                {
+                    if (indexes[*it] > mru)
+                    {
+                        mru = indexes[*it];
+                        val = *it;
+                    }
+                }
+
+                s.erase(val);
+                s.insert(pageID[i]);
+                missCount++;
+            }
+            indexes[pageID[i]] = i;
+        }
+    }
+    return {total, missCount};
 }
 
 int main()
 {
-    handler* run=handler::createHandler();
+    handler *run = handler::createHandler();
     run->analyzeOnAllPageSize();
     run->printAnalyzedData();
     return 0;
