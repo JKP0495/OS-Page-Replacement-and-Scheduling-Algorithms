@@ -26,6 +26,7 @@ public:
     history(){};
     void updateHistory(input *in, output *out);
     pair<input *, output *> getLastElement();
+    void printStats();
 };
 
 class handler
@@ -126,24 +127,20 @@ public:
 
 public:
     int getProcessSize();
-
-public:
-    void printData();
 };
 
 class output
 {
-    vector<vector<int>> mainOutput;
     output();
+
+public:
+    vector<vector<int>> mainOutput;
 
 public:
     void mergeOutput(vector<int> curOutput);
 
 public:
     static output *getOutput();
-
-public:
-    void printData();
 };
 
 class FIFO : public RAM
@@ -166,6 +163,43 @@ map<string, algoData *> mapping = {
 // history class
 
 history *history::currentInstance = NULL;
+
+void history::printStats()
+{
+    input *currInput = hist.back().first;
+    output *currOutput = hist.back().second;
+
+    cout << "Results for FIFO:" << endl;
+    cout << "Page size \t -> \t Hit rate" << endl;
+    int n = currOutput->mainOutput[0].size();
+    for (int i = 1; i < n; i++)
+    {
+        int hitRate = 0;
+        // Jalp please calculate this, I am getting confused
+        //  hitRate=currInput->
+        cout << i << '\t -> \t' << hitRate << endl;
+    }
+    cout << "Results for OPT:" << endl;
+    cout << "Page size \t -> \t Hit rate" << endl;
+
+    for (int i = 1; i < n; i++)
+    {
+        int hitRate = 0;
+        // Jalp please calculate this, I am getting confused
+        //  hitRate=currInput->
+        cout << i << '\t -> \t' << hitRate << endl;
+    }
+    cout << "Results for LRU:" << endl;
+    cout << "Page size \t -> \t Hit rate" << endl;
+
+    for (int i = 1; i < n; i++)
+    {
+        int hitRate = 0;
+        // Jalp please calculate this, I am getting confused
+        //  hitRate=currInput->
+        cout << i << '\t -> \t' << hitRate << endl;
+    }
+}
 
 history *history::getInstance()
 {
@@ -208,13 +242,6 @@ output *output::getOutput()
 void output::mergeOutput(vector<int> curOutput)
 {
     this->mainOutput.push_back(curOutput);
-}
-
-void output::printData()
-{
-    // Naisheel please complete this
-    // This function prints output(analyzed) data given to it for final print of output
-    cout << "HI" << endl;
 }
 
 // input class
@@ -262,13 +289,6 @@ int input::getProcessSize()
     return this->processSize;
 }
 
-void input::printData()
-{
-    // Naisheel please complete this
-    // This function prints input data given to it for final print of output
-    cout << "HI" << endl;
-}
-
 // Handler Class
 
 handler::handler(int RAMSize, int noOfProcess, int processSize)
@@ -300,11 +320,7 @@ void handler::printAnalyzedData()
     input *mainInput = instance->getLastElement().first;
     output *mainOutput = instance->getLastElement().second;
 
-    // Prints input data
-    mainInput->printData();
-
-    // Prints input data
-    mainOutput->printData();
+    instance->printStats();
 }
 
 // Analyze Class
