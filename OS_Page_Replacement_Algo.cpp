@@ -17,9 +17,9 @@ class history
 {
 private
     static history *currentInstance;
+    static vector<pair<input *, output *>> hist;
 
 public:
-    static vector<pair<input *, output *>> hist;
     // deleting copy constructor
     history(const history &obj) = delete;
     static history *getInstance();
