@@ -172,14 +172,50 @@ void history::printCurrentStats()
     input *currInput = hist.back().first;
     output *currOutput = hist.back().second;
 
-    cout << "Results for "<<"FIFO"<<":" << endl;
-    cout << "Page size \t -> \t Hit rate" << endl;
-    int n = currOutput->mainOutput.size();
-    for (int i = 1; i < n; i++)
-    {
-        int total = currOutput->mainOutput[i][0][TOTAL];
-        int miss = currOutput->mainOutput[i][0][MISS];
-        cout << i+1 << "\t -> \t" << 1.0 * (total - miss) / total << endl;
+    int noOfRows = currOutput->mainOutput.size();
+    int noOfColumns = mapping.size()+1;
+    vector<vector<string>> table(noOfRows,vector<string>(noOfColumns));
+    cout << "Results:" << endl;
+    table[0][0] = "Page Size";
+    for(int i=1;i<noOfRows;i++){
+        table[i][0] = to_string(i);
+    }
+    for(auto it:mapping){
+        table[0][it.second->algoID] = it.first+"(Hit Rate)";
+        for (int i = 1; i < noOfRows; i++)
+        {
+            int total = currOutput->mainOutput[i][it.second->algoID][TOTAL];
+            int miss = currOutput->mainOutput[i][it.second->algoID][MISS];
+            table[i][it.second->algoID] = to_string(1.0 * (total - miss) / total);
+        }
+    }
+    for(int j=0;j<noOfColumns;j++){
+        int mxLen = 0;
+        for(int i=0;i<noOfRows;i++){
+            mxLen = max(mxLen,(int)table[i][j].size());
+        }
+        for(int i=0;i<noOfRows;i++){
+            while(((int)table[i][j].size()) != mxLen){
+                table[i][j] += ' ';
+            }
+        }
+    }
+
+    vector<string> rowString(noOfRows+2);
+    for(int i=0;i<noOfRows;i++){
+        rowString[i+1] += "| ";
+        for(int j=0;j<noOfColumns;j++){
+            rowString[i+1] += table[i][j];
+            rowString[i+1] += " | ";
+        }
+    }
+    while(rowString[0].size() != rowString[1].size()){
+        rowString[0] += "-";
+        rowString[noOfRows+1] += "-";
+    }
+
+    for(auto it: rowString){
+        cout<<it<<endl;
     }
     
 }
@@ -291,7 +327,7 @@ handler *handler::createHandler()
 
 void handler::analyzeOnAllPageSize()
 {
-    for (int curPageSize = 1; curPageSize <= processSize; curPageSize++)
+    for (int curPageSize = 0; curPageSize <= processSize; curPageSize++)
     {
         analyze *curAnalyze = analyze::createAnalyze(noOfProcess, RAMSize, processSize, curPageSize);
         curAnalyze->runProcesses();
@@ -372,7 +408,8 @@ process *process::createProcess(int noOfPages, int noOfRAMPages)
 
 vector<vector<int>> process::runProcess()
 {
-    vector<vector<int>> processOutput;
+    // Added 1 element to make it 1-based indexed
+    vector<vector<int>> processOutput(1,vector<int>(2,-1));
     for (auto it : mapping)
     {
         if(noOfPages == -1){
