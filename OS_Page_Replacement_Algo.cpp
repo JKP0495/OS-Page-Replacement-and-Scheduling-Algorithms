@@ -168,6 +168,16 @@ public:
     vector<int> processRAM(int noOfPages, int noOfRAMPages, vector<int> pageID) override;
 };
 
+class MRU : public RAM
+{
+
+public:
+    MRU(int noOfRAMPages, int noOfPages, vector<int> pageID) : RAM(noOfRAMPages, noOfPages, pageID){};
+
+public:
+    vector<int> processRAM(int noOfPages, int noOfRAMPages, vector<int> pageID) override;
+};
+
 // Mapping of algo to its name
 unordered_map<string, algoData *> mapping = {{"OPT", new algoData([&](int noOfRAMPages, int noOfPages, vector<int> pageID)
                                                                   { return new OPT(noOfRAMPages, noOfPages, pageID); }, 1)},
@@ -439,6 +449,96 @@ vector<int> FIFO::processRAM(int noOfPages, int noOfRAMPages, vector<int> pageID
         }
     }
     return {missCount, total};
+}
+
+// LRU class
+
+vector<int> LRU::processRAM(int noOfPages, int noOfRAMPages, vector<int> pageID)
+{
+    int missCount = 0;
+    int total = pageID.size();
+
+    unordered_set<int> s;
+    unordered_map<int, int> indexes;
+
+    for (int i = 0; i < pageID.size(); i++)
+    {
+        if (s.size() < noOfRAMPages)
+        {
+            if (s.find(pageID[i]) == s.end())
+            {
+                s.insert(pageID[i]);
+                missCount++;
+            }
+            indexes[pageID[i]] = i;
+        }
+        else
+        {
+            if (s.find(pageID[i]) == s.end())
+            {
+                int lru = INT_MAX, val;
+                for (auto it = s.begin(); it != s.end(); it++)
+                {
+                    if (indexes[*it] < lru)
+                    {
+                        lru = indexes[*it];
+                        val = *it;
+                    }
+                }
+
+                s.erase(val);
+                s.insert(pageID[i]);
+                missCount++;
+            }
+            indexes[pageID[i]] = i;
+        }
+    }
+    return {total, missCount};
+}
+
+// MRU class
+
+vector<int> MRU::processRAM(int noOfPages, int noOfRAMPages, vector<int> pageID)
+{
+    int missCount = 0;
+    int total = pageID.size();
+
+    unordered_set<int> s;
+    unordered_map<int, int> indexes;
+
+    for (int i = 0; i < pageID.size(); i++)
+    {
+        if (s.size() < noOfRAMPages)
+        {
+            if (s.find(pageID[i]) == s.end())
+            {
+                s.insert(pageID[i]);
+                missCount++;
+            }
+            indexes[pageID[i]] = i;
+        }
+        else
+        {
+            if (s.find(pageID[i]) == s.end())
+            {
+                int mru = -1, val;
+                for (auto it = s.begin(); it != s.end(); it++)
+                {
+                    if (indexes[*it] > mru)
+                    {
+                        mru = indexes[*it];
+                        val = *it;
+                    }
+                }
+
+                s.erase(val);
+                s.insert(pageID[i]);
+                missCount++;
+            }
+            indexes[pageID[i]] = i;
+        }
+    }
+    return {total, missCount};
 }
 
 int main()
