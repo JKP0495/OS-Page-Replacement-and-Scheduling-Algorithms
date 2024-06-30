@@ -1,6 +1,9 @@
 #include <bits/stdc++.h>
 using namespace std;
 
+const int MISS = 0;
+const int TOTAL = 1;
+
 // Declaration of Classes
 class history;
 class handler;
@@ -26,7 +29,7 @@ public:
     history(){};
     void updateHistory(input *in, output *out);
     pair<input *, output *> getLastElement();
-    void printStats();
+    void printCurrentStats();
 };
 
 class handler
@@ -40,10 +43,10 @@ class handler
 public:
     static handler *createHandler();
 
-private:
+public:
     void analyzeOnAllPageSize();
 
-private:
+public:
     void printAnalyzedData();
 };
 
@@ -52,7 +55,7 @@ class analyze
     int noOfProcess;
     int noOfPages;
     int noOfRAMPages;
-    vector<int> curOutput;
+    vector<vector<int>> curOutput;
 
     analyze(int noOfProcess, int RAMSize, int processSize);
 
@@ -63,13 +66,13 @@ public:
     void runProcesses();
 
 private:
-    void mergeOutput(vector<int> curOutput);
+    void mergeOutput(vector<vector<int>> curOutput);
 };
 
 class process
 {
     int noOfRAMPages;
-    int noOfpages;
+    int noOfPages;
     vector<int> pageID; // randomly generated, with length predefined
 
     process(int noOfPages, int noOfRAMPages, vector<int> pageID);
@@ -78,20 +81,20 @@ public:
     static process *createProcess(int noOfPages, int noOfRAMPages);
 
 public:
-    vector<int> runProcess();
+    vector<vector<int>> runProcess();
 };
 
 class RAM
 {
     int noOfRAMPages;
-    int noOfpages;
+    int noOfPages;
     vector<int> pageID;
 
 public:
-    RAM(int noOfRAMPages, int noOfpages, vector<int> pageID);
+    RAM(int noOfRAMPages, int noOfPages, vector<int> pageID);
 
 public:
-    virtual int processRAM(int noOfPages, int noOfRAMPages, vector<int> pageID) = 0;
+    virtual vector<int> processRAM(int noOfPages, int noOfRAMPages, vector<int> pageID) = 0;
 };
 
 class algoData
@@ -134,10 +137,10 @@ class output
     output();
 
 public:
-    vector<vector<int>> mainOutput;
+    vector<vector<vector<int>>> mainOutput;
 
 public:
-    void mergeOutput(vector<int> curOutput);
+    void mergeOutput(vector<vector<int>> curOutput);
 
 public:
     static output *getOutput();
@@ -147,16 +150,16 @@ class FIFO : public RAM
 {
 
 public:
-    FIFO(int noOfRAMPages, int noOfpages, vector<int> pageID) : RAM(noOfRAMPages, noOfpages, pageID){};
+    FIFO(int noOfRAMPages, int noOfPages, vector<int> pageID) : RAM(noOfRAMPages, noOfPages, pageID){};
 
 public:
-    int processRAM(int noOfPages, int noOfRAMPages, vector<int> pageID) override;
+    vector<int> processRAM(int noOfPages, int noOfRAMPages, vector<int> pageID) override;
 };
 
 // Mapping of algo to its name
 map<string, algoData *> mapping = {
-    {"FIFO", new algoData([&](int noOfRAMPages, int noOfpages, vector<int> pageID)
-                          { return new FIFO(noOfRAMPages, noOfpages, pageID); }, 1)}};
+    {"FIFO", new algoData([&](int noOfRAMPages, int noOfPages, vector<int> pageID)
+                          { return new FIFO(noOfRAMPages, noOfPages, pageID); }, 1)}};
 
 // Defination of Functions
 
@@ -164,41 +167,21 @@ map<string, algoData *> mapping = {
 
 history *history::currentInstance = NULL;
 
-void history::printStats()
+void history::printCurrentStats()
 {
     input *currInput = hist.back().first;
     output *currOutput = hist.back().second;
 
-    cout << "Results for FIFO:" << endl;
+    cout << "Results for "<<"FIFO"<<":" << endl;
     cout << "Page size \t -> \t Hit rate" << endl;
-    int n = currOutput->mainOutput[0].size();
+    int n = currOutput->mainOutput.size();
     for (int i = 1; i < n; i++)
     {
-        int hitRate = 0;
-        // Jalp please calculate this, I am getting confused
-        //  hitRate=currInput->
-        cout << i << '\t -> \t' << hitRate << endl;
+        int total = currOutput->mainOutput[i][0][TOTAL];
+        int miss = currOutput->mainOutput[i][0][MISS];
+        cout << i+1 << "\t -> \t" << 1.0 * (total - miss) / total << endl;
     }
-    cout << "Results for OPT:" << endl;
-    cout << "Page size \t -> \t Hit rate" << endl;
-
-    for (int i = 1; i < n; i++)
-    {
-        int hitRate = 0;
-        // Jalp please calculate this, I am getting confused
-        //  hitRate=currInput->
-        cout << i << '\t -> \t' << hitRate << endl;
-    }
-    cout << "Results for LRU:" << endl;
-    cout << "Page size \t -> \t Hit rate" << endl;
-
-    for (int i = 1; i < n; i++)
-    {
-        int hitRate = 0;
-        // Jalp please calculate this, I am getting confused
-        //  hitRate=currInput->
-        cout << i << '\t -> \t' << hitRate << endl;
-    }
+    
 }
 
 history *history::getInstance()
@@ -239,7 +222,7 @@ output *output::getOutput()
     return new output();
 }
 
-void output::mergeOutput(vector<int> curOutput)
+void output::mergeOutput(vector<vector<int>> curOutput)
 {
     this->mainOutput.push_back(curOutput);
 }
@@ -301,13 +284,14 @@ handler::handler(int RAMSize, int noOfProcess, int processSize)
 handler *handler::createHandler()
 {
     history *instance = history::getInstance();
+    input::createHistory();
     input *curInput = instance->getLastElement().first;
     return new handler(curInput->getRAMSize(), curInput->getNoOfProcess(), curInput->getProcessSize());
 }
 
 void handler::analyzeOnAllPageSize()
 {
-    for (int curPageSize = 0; curPageSize < processSize; curPageSize++)
+    for (int curPageSize = 1; curPageSize <= processSize; curPageSize++)
     {
         analyze *curAnalyze = analyze::createAnalyze(noOfProcess, RAMSize, processSize, curPageSize);
         curAnalyze->runProcesses();
@@ -317,10 +301,7 @@ void handler::analyzeOnAllPageSize()
 void handler::printAnalyzedData()
 {
     history *instance = history::getInstance();
-    input *mainInput = instance->getLastElement().first;
-    output *mainOutput = instance->getLastElement().second;
-
-    instance->printStats();
+    instance->printCurrentStats();
 }
 
 // Analyze Class
@@ -334,8 +315,8 @@ analyze::analyze(int noOfProcess, int noOfPages, int noOfRAMPages)
 
 analyze *analyze::createAnalyze(int noOfProcess, int RAMSize, int processSize, int pageSize)
 {
-    int noOfPages = ((processSize + pageSize - 1) / pageSize);
-    int noOfRAMPages = ((RAMSize + pageSize - 1) / pageSize);
+    int noOfPages = (pageSize == 0 ? -1 : ((processSize + pageSize - 1) / pageSize));
+    int noOfRAMPages = (pageSize == 0 ? -1 : ((RAMSize + pageSize - 1) / pageSize));
     return new analyze(noOfProcess, noOfPages, noOfRAMPages);
 }
 
@@ -344,7 +325,7 @@ void analyze::runProcesses()
     for (int i = 0; i < noOfProcess; i++)
     {
         process *curProcess = process::createProcess(noOfPages, noOfRAMPages);
-        vector<int> curOutput = curProcess->runProcess();
+        vector<vector<int>> curOutput = curProcess->runProcess();
         mergeOutput(curOutput);
     }
     history *instance = history::getInstance();
@@ -352,13 +333,14 @@ void analyze::runProcesses()
     mainOutput->mergeOutput(this->curOutput);
 }
 
-void analyze::mergeOutput(vector<int> curOutput)
+void analyze::mergeOutput(vector<vector<int>> curOutput)
 {
     for (int i = 0; i < curOutput.size(); i++)
     {
         if (this->curOutput.size() > i)
         {
-            this->curOutput[i] += curOutput[i];
+            this->curOutput[i][TOTAL] += curOutput[i][TOTAL];
+            this->curOutput[i][MISS] += curOutput[i][MISS];
         }
         else
         {
@@ -371,7 +353,7 @@ void analyze::mergeOutput(vector<int> curOutput)
 
 process::process(int noOfPages, int noOfRAMPages, vector<int> pageID)
 {
-    this->noOfpages = noOfPages;
+    this->noOfPages = noOfPages;
     this->noOfRAMPages = noOfRAMPages;
     this->pageID = pageID;
 }
@@ -388,22 +370,26 @@ process *process::createProcess(int noOfPages, int noOfRAMPages)
     return new process(noOfPages, noOfRAMPages, pageID);
 }
 
-vector<int> process::runProcess()
+vector<vector<int>> process::runProcess()
 {
-    vector<int> processOutput;
+    vector<vector<int>> processOutput;
     for (auto it : mapping)
     {
-        RAM *process = it.second->createFunction(noOfpages, noOfRAMPages, pageID);
-        processOutput.push_back(process->processRAM(noOfpages, noOfRAMPages, pageID));
+        if(noOfPages == -1){
+            processOutput.push_back({-1,-1});
+            continue;
+        }
+        RAM *process = it.second->createFunction(noOfPages, noOfRAMPages, pageID);
+        processOutput.push_back(process->processRAM(noOfPages, noOfRAMPages, pageID));
     }
     return processOutput;
 }
 
 // RAM class
 
-RAM::RAM(int noOfRAMPages, int noOfpages, vector<int> pageID)
+RAM::RAM(int noOfRAMPages, int noOfPages, vector<int> pageID)
 {
-    this->noOfpages = noOfpages;
+    this->noOfPages = noOfPages;
     this->noOfRAMPages = noOfRAMPages;
     this->pageID = pageID;
 }
@@ -417,9 +403,10 @@ algoData::algoData(function<RAM *(int, int, vector<int>)> createFunction, int al
 }
 
 // FIFO class
-int FIFO::processRAM(int noOfPages, int noOfRAMPages, vector<int> pageID)
+vector<int> FIFO::processRAM(int noOfPages, int noOfRAMPages, vector<int> pageID)
 {
     int missCount = 0;
+    int total = pageID.size();
     set<int> chachedPages;
     queue<int> inOrder;
     for (int i = 0; i < pageID.size(); i++)
@@ -428,15 +415,18 @@ int FIFO::processRAM(int noOfPages, int noOfRAMPages, vector<int> pageID)
         {
             missCount++;
             chachedPages.erase(inOrder.front());
-            inOrder.pop();
+            if(chachedPages.size() == noOfRAMPages)inOrder.pop();
             chachedPages.insert(pageID[i]);
             inOrder.push(pageID[i]);
         }
     }
+    return {missCount,total};
 }
 
 int main()
 {
-
+    handler* run=handler::createHandler();
+    run->analyzeOnAllPageSize();
+    run->printAnalyzedData();
     return 0;
 }
