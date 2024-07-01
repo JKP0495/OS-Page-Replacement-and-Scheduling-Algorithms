@@ -178,6 +178,16 @@ public:
     vector<int> processRAM(int noOfPages, int noOfRAMPages, vector<int> pageID) override;
 };
 
+class OPT : public RAM
+{
+
+public:
+    OPT(int noOfRAMPages, int noOfPages, vector<int> pageID) : RAM(noOfRAMPages, noOfPages, pageID){};
+
+public:
+    vector<int> processRAM(int noOfPages, int noOfRAMPages, vector<int> pageID) override;
+};
+
 // Mapping of algo to its name
 unordered_map<string, algoData *> mapping = {{"OPT", new algoData([&](int noOfRAMPages, int noOfPages, vector<int> pageID)
                                                                   { return new OPT(noOfRAMPages, noOfPages, pageID); }, 1)},
@@ -353,7 +363,7 @@ handler *handler::createHandler()
 
 void handler::analyzeOnAllPageSize()
 {
-    for (int curPageSize = 0; curPageSize <= processSize; curPageSize++)
+    for (int curPageSize = 0; curPageSize <= min(RAMSize,processSize); curPageSize++)
     {
         analyze *curAnalyze = analyze::createAnalyze(noOfProcess, RAMSize, processSize, curPageSize);
         curAnalyze->runProcesses();
@@ -471,7 +481,7 @@ vector<int> FIFO::processRAM(int noOfPages, int noOfRAMPages, vector<int> pageID
 {
     int missCount = 0;
     int total = pageID.size();
-    set<int> chachedPages;
+    unordered_set<int> chachedPages;
     queue<int> inOrder;
     for (int i = 0; i < pageID.size(); i++)
     {
@@ -530,7 +540,7 @@ vector<int> LRU::processRAM(int noOfPages, int noOfRAMPages, vector<int> pageID)
             indexes[pageID[i]] = i;
         }
     }
-    return {total, missCount};
+    return {missCount, total};
 }
 
 // MRU class
@@ -575,7 +585,46 @@ vector<int> MRU::processRAM(int noOfPages, int noOfRAMPages, vector<int> pageID)
             indexes[pageID[i]] = i;
         }
     }
-    return {total, missCount};
+    return {missCount, total};
+}
+
+// OPT class
+
+vector<int> OPT::processRAM(int noOfPages, int noOfRAMPages, vector<int> pageID)
+{
+    int missCount = 0;
+    int total = pageID.size();
+
+    vector<int> nxtOcc(total,total);
+    map<int,int> nearestOcc;
+    for(int i=total-1;i>=0;i--){
+        if(nearestOcc.find(pageID[i]) != nearestOcc.end()){
+            nxtOcc[i] = nearestOcc[pageID[i]];
+        }
+        nearestOcc[pageID[i]] = i;
+    }
+
+    unordered_set<int> chachedPages;
+    set<int> nxtOccOfChachedPages;
+
+    for (int i = 0; i < pageID.size(); i++)
+    {
+        if(!chachedPages.count(pageID[i])){
+            if(chachedPages.size() == noOfRAMPages){
+                int pageToRemove = pageID[*nxtOccOfChachedPages.rbegin()];
+                nxtOccOfChachedPages.erase(*nxtOccOfChachedPages.rbegin());
+                chachedPages.erase(pageToRemove);
+            }
+            chachedPages.insert(pageID[i]);
+            nxtOccOfChachedPages.insert(nxtOcc[i]);
+            missCount++;
+        }
+        else{
+            nxtOccOfChachedPages.erase(i);
+            nxtOccOfChachedPages.insert(nxtOcc[i]);
+        }
+    }
+    return {missCount, total};
 }
 
 int main()
