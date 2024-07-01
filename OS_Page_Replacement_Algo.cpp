@@ -445,16 +445,16 @@ process *process::createProcess(int noOfPages, int noOfRAMPages)
 vector<vector<int>> process::runProcess()
 {
     // Added 1 element to make it 1-based indexed
-    vector<vector<int>> processOutput(1,vector<int>(2,-1));
+    vector<vector<int>> processOutput(mapping.size()+1,vector<int>(2,-1));
     for (auto it : mapping)
     {
         if (noOfPages == -1)
         {
-            processOutput.push_back({-1, -1});
+            processOutput[it.second->algoID] = {-1, -1};
             continue;
         }
         RAM *process = it.second->createFunction(noOfPages, noOfRAMPages, pageID);
-        processOutput.push_back(process->processRAM(noOfPages, noOfRAMPages, pageID));
+        processOutput[it.second->algoID] = process->processRAM(noOfPages, noOfRAMPages, pageID);
     }
     return processOutput;
 }
@@ -488,9 +488,10 @@ vector<int> FIFO::processRAM(int noOfPages, int noOfRAMPages, vector<int> pageID
         if (!chachedPages.count(pageID[i]))
         {
             missCount++;
-            chachedPages.erase(inOrder.front());
-            if (chachedPages.size() == noOfRAMPages)
+            if (chachedPages.size() == noOfRAMPages){
+                chachedPages.erase(inOrder.front());
                 inOrder.pop();
+            }
             chachedPages.insert(pageID[i]);
             inOrder.push(pageID[i]);
         }
